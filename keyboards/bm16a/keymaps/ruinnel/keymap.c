@@ -98,7 +98,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       break;
     case KC_M_OPEN_TERM:
       if (record->event.pressed) {
-        SEND_STRING(SS_DOWN(X_LCTL) SS_DOWN(X_LGUI) SS_DOWN(X_LSHIFT) SS_TAP(X_Z) SS_UP(X_LSHIFT) SS_UP(X_LGUI) SS_UP(X_LCTL));
+        SEND_STRING(SS_DOWN(X_LCTL) SS_DOWN(X_LGUI) SS_DOWN(X_LSHIFT) SS_DOWN(X_LALT) SS_TAP(X_Z) SS_UP(X_LALT) SS_UP(X_LSHIFT) SS_UP(X_LGUI) SS_UP(X_LCTL));
       } else {
         // skip
       }
