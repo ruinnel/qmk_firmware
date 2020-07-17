@@ -32,15 +32,16 @@ enum {
      KC_M_NEXT_TAB,
      KC_M_PREV_TAB,
      KC_M_RECOVER_TAB,
+     KC_M_LOOK_UP_IN_DASH,
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [_BASE] = LAYOUT_ortho_4x4(
-    MO(_FN1),        _______,         _______,          KC_M_OPEN_TERM,
-    _______,         KC_M_PREV_TAB,   KC_M_RECOVER_TAB, KC_M_NEXT_TAB,
-    _______,         KC_M_WP_FULL,    KC_M_WP_UP,       KC_M_WP_RECOVER,
-    _______,         KC_M_WP_LEFT,    KC_M_WP_DOWN,     KC_M_WP_RIGHT
+    MO(_FN1),        _______,         KC_M_LOOK_UP_IN_DASH, KC_M_OPEN_TERM,
+    _______,         KC_M_PREV_TAB,   KC_M_RECOVER_TAB,     KC_M_NEXT_TAB,
+    _______,         KC_M_WP_FULL,    KC_M_WP_UP,           KC_M_WP_RECOVER,
+    _______,         KC_M_WP_LEFT,    KC_M_WP_DOWN,         KC_M_WP_RIGHT
   ),
   [_FN1] = LAYOUT_ortho_4x4(
     _______,  KC_PAST,  KC_PSLS,  _______,
@@ -120,6 +121,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     case KC_M_RECOVER_TAB:
       if (record->event.pressed) {
         SEND_STRING(SS_DOWN(X_LGUI) SS_DOWN(X_LSHIFT) SS_TAP(X_T) SS_UP(X_LSHIFT) SS_UP(X_LGUI));
+      } else {
+        // skip
+      }
+      break;
+    case KC_M_LOOK_UP_IN_DASH:
+      if (record->event.pressed) {
+        SEND_STRING(SS_DOWN(X_LCTL) SS_DOWN(X_LGUI) SS_DOWN(X_LSHIFT) SS_DOWN(X_LALT) SS_TAP(X_D) SS_UP(X_LALT) SS_UP(X_LSHIFT) SS_UP(X_LGUI) SS_UP(X_LCTL));
       } else {
         // skip
       }
