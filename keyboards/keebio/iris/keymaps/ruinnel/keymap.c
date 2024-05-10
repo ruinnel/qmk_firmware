@@ -1,20 +1,23 @@
 #include QMK_KEYBOARD_H
+#include "os_detection.h"
 
+#define _QWERTY_MAC 0
+#define _QWERTY_OTHER 1
+#define _LOWER 2
+#define _RAISE 3
+#define _ADJUST 4
 
-#define _QWERTY 0
-#define _LOWER 1
-#define _RAISE 2
-#define _ADJUST 3
 
 enum custom_keycodes {
-  QWERTY = SAFE_RANGE,
+  QWERTY_MAC = SAFE_RANGE,
+  QWERTY_OTHER,
   LOWER,
   RAISE,
-  ADJUST,
+  ADJUST
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-  [_QWERTY] = LAYOUT(
+  [_QWERTY_MAC] = LAYOUT(
   //┌────────┬────────┬────────┬────────┬────────┬────────┐                          ┌────────┬────────┬────────┬────────┬────────┬────────┐
      KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,                               KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_BSPC,
   //├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
@@ -25,6 +28,20 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_HOME,          KC_END, KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_ENT,
   //└────────┴────────┴────────┴───┬────┴───┬────┴───┬────┴───┬────┘        └───┬────┴───┬────┴───┬────┴───┬────┴────────┴────────┴────────┘
                                     KC_LALT, KC_LGUI, LOWER,                     KC_RSFT, KC_SPC ,  LOWER
+                                // └────────┴────────┴────────┘                 └────────┴────────┴────────┘
+  ),
+
+  [_QWERTY_OTHER] = LAYOUT(
+  //┌────────┬────────┬────────┬────────┬────────┬────────┐                          ┌────────┬────────┬────────┬────────┬────────┬────────┐
+     KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,                               KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_BSPC,
+  //├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
+     KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,                               KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_GRV,
+  //├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
+     KC_LGUI, KC_A,    KC_S,    KC_D,    KC_F,    KC_G,                               KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,
+  //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐        ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
+     KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_HOME,          KC_END, KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_ENT,
+  //└────────┴────────┴────────┴───┬────┴───┬────┴───┬────┴───┬────┘        └───┬────┴───┬────┴───┬────┴───┬────┴────────┴────────┴────────┘
+                                    KC_LALT, KC_LCTL, LOWER,                     KC_RSFT, KC_SPC ,  LOWER
                                 // └────────┴────────┴────────┘                 └────────┴────────┴────────┘
   ),
 
@@ -73,9 +90,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
-    case QWERTY:
+    case QWERTY_MAC:
       if (record->event.pressed) {
-        set_single_persistent_default_layer(_QWERTY);
+        set_single_persistent_default_layer(_QWERTY_MAC);
+      }
+      return false;
+      break;
+    case QWERTY_OTHER:
+      if (record->event.pressed) {
+        set_single_persistent_default_layer(_QWERTY_OTHER);
       }
       return false;
       break;
@@ -111,20 +134,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   return true;
 }
 
-bool encoder_update_user(uint8_t index, bool clockwise) {
-    if (index == 0) {
-        if (clockwise) {
-            tap_code(KC_VOLU);
-        } else {
-            tap_code(KC_VOLD);
-        }
+void keyboard_post_init_user(void) {
+    // Set default layer based on the detected OS after a 500 ms delay.
+    wait_ms(500);
+    switch (detected_host_os()) {
+        case OS_UNSURE:  // Don't change default layer if unsure.
+            rgb_matrix_set_color_all(RGB_RED);
+            set_single_persistent_default_layer(_QWERTY_OTHER);
+        break;
+        case OS_MACOS:   // On Mac, set default layer to BASE_MAC.
+        case OS_IOS:
+            rgb_matrix_set_color_all(RGB_BLUE);
+            set_single_persistent_default_layer(_QWERTY_MAC);
+        break;
+        default:         // On Windows and Linux, set to BASE_WIN.
+            rgb_matrix_set_color_all(RGB_ORANGE);
+            set_single_persistent_default_layer(_QWERTY_OTHER);
+        break;
     }
-    else if (index == 1) {
-        if (clockwise) {
-            tap_code(KC_PGDN);
-        } else {
-            tap_code(KC_PGUP);
-        }
-    }
-    return true;
 }
