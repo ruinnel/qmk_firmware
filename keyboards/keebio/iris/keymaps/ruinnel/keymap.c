@@ -7,6 +7,8 @@
 #define _RAISE 3
 #define _ADJUST 4
 
+#define DF_MAC DF(_QWERTY_MAC)
+#define DF_OTHER DF(_QWERTY_OTHER)
 
 enum custom_keycodes {
   QWERTY_MAC = SAFE_RANGE,
@@ -15,6 +17,33 @@ enum custom_keycodes {
   RAISE,
   ADJUST
 };
+
+const rgblight_segment_t PROGMEM mac_layer[] = RGBLIGHT_LAYER_SEGMENTS(
+    {0, 27, HSV_OFF},       // Light 28 LEDs, starting with LED 0(keylight)
+    {28, 6, HSV_OFF},       // Light 6 LEDs, starting with LED 28(underglow)
+    {34, 27, HSV_OFF},      // Light 28 LEDs, starting with LED 34(keylight)
+    {62, 6, HSV_OFF}        // Light 6 LEDs, starting with LED 62(underglow)
+);
+
+const rgblight_segment_t PROGMEM other_layer[] = RGBLIGHT_LAYER_SEGMENTS(
+    {0, 27, HSV_RED},       // Light 28 LEDs, starting with LED 0(keylight)
+    {28, 6, HSV_RED},       // Light 6 LEDs, starting with LED 28(underglow)
+    {34, 27, HSV_RED},      // Light 28 LEDs, starting with LED 34(keylight)
+    {62, 6, HSV_RED}        // Light 6 LEDs, starting with LED 62(underglow)
+);
+
+const rgblight_segment_t PROGMEM lower_layer[] = RGBLIGHT_LAYER_SEGMENTS(
+    {0, 27, HSV_TEAL},       // Light 28 LEDs, starting with LED 0(keylight)
+    {28, 6, HSV_TEAL},       // Light 6 LEDs, starting with LED 28(underglow)
+    {34, 27, HSV_TEAL},      // Light 28 LEDs, starting with LED 34(keylight)
+    {62, 6, HSV_TEAL}        // Light 6 LEDs, starting with LED 62(underglow)
+);
+
+const rgblight_segment_t* const PROGMEM rgb_layers[] = RGBLIGHT_LAYERS_LIST(
+    mac_layer,
+    other_layer,
+    lower_layer
+);
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [_QWERTY_MAC] = LAYOUT(
@@ -53,7 +82,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
      KC_LCTL, KC_A,    KC_S,    KC_D,    KC_F,    KC_G,                               KC_LEFT, KC_DOWN, KC_UP,   KC_RIGHT,KC_SCLN, KC_QUOT,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐        ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-     KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_LSFT,          KC_LGUI,  KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_ENT,
+     KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    DF_OTHER,         DF_MAC,  KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_ENT,
   //└────────┴────────┴────────┴───┬────┴───┬────┴───┬────┴───┬────┘        └───┬────┴───┬────┴───┬────┴───┬────┴────────┴────────┴────────┘
                                     KC_LALT, KC_LGUI, LOWER,                     KC_RSFT, KC_SPC ,  KC_RCTL
                                 // └────────┴────────┴────────┘                 └────────┴────────┴────────┘
@@ -96,12 +125,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       }
       return false;
       break;
-    case QWERTY_OTHER:
-      if (record->event.pressed) {
-        set_single_persistent_default_layer(_QWERTY_OTHER);
-      }
-      return false;
-      break;
     case LOWER:
       if (record->event.pressed) {
         layer_on(_LOWER);
@@ -134,22 +157,25 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   return true;
 }
 
+bool led_update_user(led_t led_state) {
+    //rgblight_set_layer_state(0, led_state.caps_lock);
+    return true;
+}
+
+layer_state_t default_layer_state_set_user(layer_state_t state) {
+    rgblight_set_layer_state(0, layer_state_cmp(state, _QWERTY_MAC));
+    rgblight_set_layer_state(1, layer_state_cmp(state, _QWERTY_OTHER));
+    return state;
+}
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+    rgblight_set_layer_state(2, layer_state_cmp(state, _LOWER));
+    //rgblight_set_layer_state(3, layer_state_cmp(state, _ADJUST));
+    return state;
+}
+
 void keyboard_post_init_user(void) {
-    // Set default layer based on the detected OS after a 500 ms delay.
-    wait_ms(500);
-    switch (detected_host_os()) {
-        case OS_UNSURE:  // Don't change default layer if unsure.
-            rgb_matrix_set_color_all(RGB_RED);
-            set_single_persistent_default_layer(_QWERTY_OTHER);
-        break;
-        case OS_MACOS:   // On Mac, set default layer to BASE_MAC.
-        case OS_IOS:
-            rgb_matrix_set_color_all(RGB_BLUE);
-            set_single_persistent_default_layer(_QWERTY_MAC);
-        break;
-        default:         // On Windows and Linux, set to BASE_WIN.
-            rgb_matrix_set_color_all(RGB_ORANGE);
-            set_single_persistent_default_layer(_QWERTY_OTHER);
-        break;
-    }
+    // Enable the LED layers
+    rgblight_layers = rgb_layers;
+    set_single_persistent_default_layer(_QWERTY_MAC);
 }
