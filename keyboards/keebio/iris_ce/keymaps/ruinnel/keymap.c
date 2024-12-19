@@ -19,24 +19,24 @@ enum custom_keycodes {
 };
 
 const rgblight_segment_t PROGMEM mac_layer[] = RGBLIGHT_LAYER_SEGMENTS(
-    {0, 27, HSV_OFF},       // Light 28 LEDs, starting with LED 0(keylight)
-    {28, 6, HSV_OFF},       // Light 6 LEDs, starting with LED 28(underglow)
-    {34, 27, HSV_OFF},      // Light 28 LEDs, starting with LED 34(keylight)
-    {62, 6, HSV_OFF}        // Light 6 LEDs, starting with LED 62(underglow)
-);
-
-const rgblight_segment_t PROGMEM other_layer[] = RGBLIGHT_LAYER_SEGMENTS(
-    {0, 27, HSV_RED},       // Light 28 LEDs, starting with LED 0(keylight)
-    {28, 6, HSV_RED},       // Light 6 LEDs, starting with LED 28(underglow)
-    {34, 27, HSV_RED},      // Light 28 LEDs, starting with LED 34(keylight)
-    {62, 6, HSV_RED}        // Light 6 LEDs, starting with LED 62(underglow)
-);
-
-const rgblight_segment_t PROGMEM lower_layer[] = RGBLIGHT_LAYER_SEGMENTS(
     {0, 27, HSV_TEAL},       // Light 28 LEDs, starting with LED 0(keylight)
     {28, 6, HSV_TEAL},       // Light 6 LEDs, starting with LED 28(underglow)
     {34, 27, HSV_TEAL},      // Light 28 LEDs, starting with LED 34(keylight)
     {62, 6, HSV_TEAL}        // Light 6 LEDs, starting with LED 62(underglow)
+);
+
+const rgblight_segment_t PROGMEM other_layer[] = RGBLIGHT_LAYER_SEGMENTS(
+    {0, 27, HSV_ORANGE},       // Light 28 LEDs, starting with LED 0(keylight)
+    {28, 6, HSV_ORANGE},       // Light 6 LEDs, starting with LED 28(underglow)
+    {34, 27, HSV_ORANGE},      // Light 28 LEDs, starting with LED 34(keylight)
+    {62, 6, HSV_ORANGE}        // Light 6 LEDs, starting with LED 62(underglow)
+);
+
+const rgblight_segment_t PROGMEM lower_layer[] = RGBLIGHT_LAYER_SEGMENTS(
+    {0, 27, HSV_RED},       // Light 28 LEDs, starting with LED 0(keylight)
+    {28, 6, HSV_RED},       // Light 6 LEDs, starting with LED 28(underglow)
+    {34, 27, HSV_RED},      // Light 28 LEDs, starting with LED 34(keylight)
+    {62, 6, HSV_RED}        // Light 6 LEDs, starting with LED 62(underglow)
 );
 
 const rgblight_segment_t* const PROGMEM rgb_layers[] = RGBLIGHT_LAYERS_LIST(
@@ -174,8 +174,28 @@ layer_state_t layer_state_set_user(layer_state_t state) {
     return state;
 }
 
+// void keyboard_post_init_user(void) {
+//     // Enable the LED layers
+//     rgblight_layers = rgb_layers;
+//     set_single_persistent_default_layer(_QWERTY_MAC);
+// }
+
 void keyboard_post_init_user(void) {
-    // Enable the LED layers
-    rgblight_layers = rgb_layers;
-    set_single_persistent_default_layer(_QWERTY_MAC);
+    // Set default layer based on the detected OS after a 500 ms delay.
+    wait_ms(500);
+    switch (detected_host_os()) {
+        case OS_UNSURE:  // Don't change default layer if unsure.
+            // rgb_matrix_set_color_all(RGB_RED);
+            set_single_persistent_default_layer(_QWERTY_OTHER);
+        break;
+        case OS_MACOS:   // On Mac, set default layer to BASE_MAC.
+        case OS_IOS:
+            // rgb_matrix_set_color_all(RGB_BLUE);
+            set_single_persistent_default_layer(_QWERTY_MAC);
+        break;
+        default:         // On Windows and Linux, set to BASE_WIN.
+            // rgb_matrix_set_color_all(RGB_ORANGE);
+            set_single_persistent_default_layer(_QWERTY_OTHER);
+        break;
+    }
 }
