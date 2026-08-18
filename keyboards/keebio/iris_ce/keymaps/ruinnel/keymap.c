@@ -138,15 +138,18 @@ void keyboard_post_init_user(void) {
    // Set default layer based on the detected OS after a 500 ms delay.
    wait_ms(500);
    switch (detected_host_os()) {
-       case OS_UNSURE:  // Don't change default layer if unsure.
+       case OS_LINUX:  // Don't change default layer if unsure.
            set_single_persistent_default_layer(_QWERTY_OTHER);
        break;
        case OS_MACOS:   // On Mac, set default layer to BASE_MAC.
        case OS_IOS:
            set_single_persistent_default_layer(_QWERTY_MAC);
        break;
-       default:         // On Windows and Linux, set to BASE_WIN.
+       case OS_WINDOWS: // On Windows and Linux, set to BASE_WIN.
            set_single_persistent_default_layer(_QWERTY_OTHER);
+       break;
+       default:         // On Windows and Linux, set to BASE_WIN.
+           set_single_persistent_default_layer(_QWERTY_MAC);
        break;
    }
 }
